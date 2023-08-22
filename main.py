@@ -68,7 +68,7 @@ async def main():
   async with client:
     await load()
 
-    with open("api_key.txt", "r") as f:
+    with open("api_key", "r") as f:
       await client.start(f.read())
 
 asyncio.run(main())
