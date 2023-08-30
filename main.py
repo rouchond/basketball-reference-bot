@@ -19,8 +19,9 @@ client.remove_command("help")
 #Start the bot
 @client.event
 async def on_ready():
-  await client.tree.sync()
+  synced = await client.tree.sync()
   await client.change_presence(activity=discord.Game("type in '$help' for help"))
+  print(f"Synced {len(synced)} command(s)")
   print("Success: Bot is connected to Discord!")
 
 #Save Server Prefixes
