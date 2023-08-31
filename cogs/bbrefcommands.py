@@ -50,6 +50,8 @@ class BbrefCommands(commands.Cog):
             ppg = avgs_szn.find("td", {"data-stat": "pts_per_g"}).text
             return f"{self.player.title()} averaged {ppg} ppg in the {self.season} season."
 
+    #NEED TO MOVE ENTIRE COMMAND TO A PREFIX COMMAND!
+
     @app_commands.command(name="ppg", description="Returns a player's ppg")
     async def pts_pg(self, interaction: discord.Interaction, player: str, draft_order: str, season : str="null"):
         self.player = player
