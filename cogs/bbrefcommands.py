@@ -16,7 +16,7 @@ import time
 class BbrefCommands(commands.Cog):
     def __init__(self, client):
         self.client = client
-
+    
     @commands.Cog.listener()
     async def on_ready(self):
         print("bbrefcommands.py ready")
@@ -39,21 +39,22 @@ class BbrefCommands(commands.Cog):
         task = await asyncio.create_task(self.get_page(session, url))
         return task
 
-    async def parse(self,bbr):
-        print('yo')
+    def parse(self,bbr):
+        start_time = time.time()
         soup = BeautifulSoup(bbr, "lxml")
-        print(soup)
+        end_time = time.time()
+        print(f"{end_time - start_time} time elapsed.")
         player_string = "".join(self.player.split("_"))
         if self.season == "null":
             avgs_table = soup.find("div", id="all_per_game-playoffs_per_game")
             avgs_szn = avgs_table.find("tfoot")
             ppg = avgs_szn.find("td", {"data-stat": "pts_per_g"}).text
             print(f"{self.player.title()} averaged {ppg} ppg over his career.")
-            return await f"{self.player.title()} averaged {ppg} ppg over his career."
+            return f"{self.player.title()} averaged {ppg} ppg over his career."
         else:
             avgs_szn = soup.find("tr", id=f"per_game.{self.season.split('-')[1]}")
             ppg = avgs_szn.find("td", {"data-stat": "pts_per_g"}).text
-            return await f"{player_string.title()} averaged {ppg} ppg in the {self.season} season."
+            return f"{player_string.title()} averaged {ppg} ppg in the {self.season} season."
 
     #NEED TO MOVE ENTIRE COMMAND TO A PREFIX COMMAND!
     """
@@ -78,13 +79,9 @@ class BbrefCommands(commands.Cog):
         async with aiohttp.ClientSession() as session:
             plr_str = self.convert_name(self.player, self.draft_order)
             data = await self.page_tasks(session, f"https://basketball-reference.com/players/{plr_str[0]}/{plr_str}")
-            print("hi")
-            start_time = time.time()
-            msg = await self.parse(data)
-            end_time = time.time()
-            print(f"{end_time - start_time} time elapsed.")
-            print(msg)
-            await ctx.send(msg)
+        msg = self.parse(data)
+        print(msg)
+        await ctx.send(msg)
        
 
         
