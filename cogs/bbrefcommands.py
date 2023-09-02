@@ -37,27 +37,24 @@ class BbrefCommands(commands.Cog):
         task = await asyncio.create_task(self.get_page(session, url))
         return task
 
-    def parse(self,bbr):
+    def parse(self,bbr, player, season):
         soup = BeautifulSoup(bbr, "lxml")
-        if self.season == "null":
+        if season == "null":
             avgs_table = soup.find("div", id="all_per_game-playoffs_per_game")
             avgs_szn = avgs_table.find("tfoot")
             ppg = avgs_szn.find("td", {"data-stat": "pts_per_g"}).text
-            return f"{self.player.title()} averaged {ppg} ppg over his career."
+            return f"{player.title()} averaged {ppg} ppg over his career."
         else:
-            avgs_szn = soup.find("tr", id=f"per_game.{self.season.split('-')[1]}")
+            avgs_szn = soup.find("tr", id=f"per_game.{season.split('-')[1]}")
             ppg = avgs_szn.find("td", {"data-stat": "pts_per_g"}).text
-            return f"{self.player.title()} averaged {ppg} ppg in the {self.season} season."
+            return f"{player.title()} averaged {ppg} ppg in the {season} season."
 
-    @app_commands.command(name="ppg", description="Returns a player's ppg")
-    async def pts_pg(self, interaction: discord.Interaction, player: str, draft_order: str, season : str="null"):
-        self.player = player
-        self.draft_order = draft_order
-        self.season = season
+    @app_commands.command(name="ppg", description="Returns a player's ppg.")
+    async def pts_pg(self, interaction: discord.Interaction, player: str, draft_order: str="01", season : str="null"):
         async with aiohttp.ClientSession() as session:
-            plr_str = self.convert_name(self.player, self.draft_order)
+            plr_str = self.convert_name(player, draft_order)
             data = await self.page_tasks(session, f"https://basketball-reference.com/players/{plr_str[0]}/{plr_str}")
-        msg = self.parse(data)
+        msg = self.parse(data, player, season)
         await interaction.response.send_message(msg)
 
         
