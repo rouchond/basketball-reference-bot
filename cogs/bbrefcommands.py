@@ -37,25 +37,36 @@ class BbrefCommands(commands.Cog):
         task = await asyncio.create_task(self.get_page(session, url))
         return task
 
-    def parse(self,bbr, player, season):
+    def parse(self, bbr, season):
         soup = BeautifulSoup(bbr, "lxml")
         if season == "null":
             avgs_table = soup.find("div", id="all_per_game-playoffs_per_game")
             avgs_szn = avgs_table.find("tfoot")
             ppg = avgs_szn.find("td", {"data-stat": "pts_per_g"}).text
-            return f"{player.title()} averaged {ppg} ppg over his career."
+            return f"Averaged {ppg} ppg over his career."
         else:
             avgs_szn = soup.find("tr", id=f"per_game.{season.split('-')[1]}")
             ppg = avgs_szn.find("td", {"data-stat": "pts_per_g"}).text
-            return f"{player.title()} averaged {ppg} ppg in the {season} season."
+            return f"Averaged {ppg} ppg in the {season} season"
+
+    def get_image(self, bbr):
+        soup = BeautifulSoup(bbr, "lxml")
+        image = soup.find("div", class_="media-item") 
+        return image.img["src"]
 
     @app_commands.command(name="ppg", description="Returns a player's ppg.")
     async def pts_pg(self, interaction: discord.Interaction, player: str, draft_order: str="01", season : str="null"):
         async with aiohttp.ClientSession() as session:
             plr_str = self.convert_name(player, draft_order)
             data = await self.page_tasks(session, f"https://basketball-reference.com/players/{plr_str[0]}/{plr_str}")
-        msg = self.parse(data, player, season)
-        await interaction.response.send_message(msg)
+        msg = self.parse(data, season)
+        ppg = discord.Embed(
+            title=player.title(),
+            color = discord.Color.random()
+            )
+        ppg.set_thumbnail(url=self.get_image(data))
+        ppg.add_field(name="PPG", value=msg)
+        await interaction.response.send_message(embed=ppg)
 
         
 
