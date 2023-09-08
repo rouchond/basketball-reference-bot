@@ -101,6 +101,12 @@ class BbrefCommands(commands.Cog):
         embed = self.create_embed(data, stats, player, season)
         await interaction.response.send_message(embed=embed)
 
+    @averages.error
+    async def averages_error(self, ctx, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send("Error: Missing required arguments. You must pass in a player")
+        else:
+            await ctx.response.send_message("An error has occurred.")
         
 
 async def setup(client):
