@@ -4,6 +4,10 @@ import os
 import json
 import asyncio
 from itertools import cycle
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 #Load server prefixes
 def get_server_prefix(client, message):
@@ -68,8 +72,6 @@ async def load():
 async def main():
   async with client:
     await load()
-
-    with open("api_key", "r") as f:
-      await client.start(f.read())
+    await client.start(os.environ.get("TOKEN"))
 
 asyncio.run(main())
