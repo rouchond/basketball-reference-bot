@@ -71,5 +71,4 @@ async def main():
 
     with open("api_key", "r") as f:
       await client.start(f.read())
-
 asyncio.run(main())
