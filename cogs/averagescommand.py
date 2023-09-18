@@ -19,15 +19,23 @@ class BbrefCommands(commands.Cog):
     async def on_ready(self):
         print("bbrefcommands.py ready")
 
-    def convert_name(self,plr, draft_order) -> str:
-        if len(draft_order) == 1:
-            draft_order = "0" + draft_order
+    def convert_name(self, plr, draft_order) -> str:
+        if len(str(draft_order)) == 1:
+            draft_order = "0" + str(draft_order)
         plr_li = plr.split(' ')
         if len(plr_li[1]) > 5:
-            plr_str = plr_li[1][0:5].lower() + plr_li[0][0:2].lower() + draft_order + ".html"
+            plr_str = plr_li[1][0:5].lower() + plr_li[0][0:2].lower() + str(draft_order) + ".html"
         else:
-             plr_str = plr_li[1].lower() + plr_li[0][0:2].lower() + draft_order + ".html"
+             plr_str = plr_li[1].lower() + plr_li[0][0:2].lower() + str(draft_order) + ".html"
         return plr_str
+    
+    def convert_season(self, plr, season):
+        if len(str(season)) == 4:
+            return f"{str(season - 1)}-{str(season)}"
+        elif season == 0:
+            return "0"
+        else:
+            return commands.BadArgument
     
     async def get_page(self,session, url) -> str:
         async with session.get(url) as r:
@@ -39,7 +47,7 @@ class BbrefCommands(commands.Cog):
 
     def parse(self, bbr, season) -> dict:
         soup = BeautifulSoup(bbr, "lxml")
-        if season == "null":
+        if season == "0":
             avgs_table = soup.find("div", id="all_per_game-playoffs_per_game")
             avgs_szn = avgs_table.find("tfoot")
             stats = {
@@ -72,7 +80,7 @@ class BbrefCommands(commands.Cog):
         return image.img["src"]
     
     def create_embed(self, data, stats, player, season) -> discord.Embed:
-        if season == "null":
+        if season == "0":
             title_str = f"{player.title()}'s Career Averages"
         else:
             title_str = f"{player.title()}'s {season} Averages"
@@ -88,25 +96,30 @@ class BbrefCommands(commands.Cog):
         avg.add_field(name="Blocks Per Game", value=stats["BPG"], inline=False)
         avg.add_field(name="Turnovers Per Game", value=stats["TOPG"], inline=False)
         avg.add_field(name="Minutes Per Game", value=stats["MPG"], inline=False)
-        if season == "null":
+        if season == "0":
             avg.set_footer(text=f"{player.title()} played {stats['seasons_played']} seasons")
         return avg
 
     @app_commands.command(name="averages", description="Returns a player's ppg.")
-    async def averages(self, interaction: discord.Interaction, player: str, draft_order: str="01", season : str="null"):
+    async def averages(self, interaction: discord.Interaction, player: str, draft_order: int=1, season : int=0):
         async with aiohttp.ClientSession() as session:
             plr_str = self.convert_name(player, draft_order)
+            plr_szn = self.convert_season(player, season)
             data = await self.page_tasks(session, f"https://basketball-reference.com/players/{plr_str[0]}/{plr_str}")
-        stats = self.parse(data, season)
-        embed = self.create_embed(data, stats, player, season)
+        stats = self.parse(data, plr_szn)
+        embed = self.create_embed(data, stats, player, plr_szn)
         await interaction.response.send_message(embed=embed)
 
     @averages.error
     async def averages_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send("Error: Missing required arguments. You must pass in a player")
+        elif isinstance(error, AttributeError):
+            await ctx.send("Error: Invalid input.")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("Error: Season doesn't exist")
         else:
-            await ctx.response.send_message("An error has occurred.")
+            await ctx.response.send_message(f"An error has occurred. {error}")
         
 
 async def setup(client):
