@@ -19,9 +19,17 @@ class BbrefCommands(commands.Cog):
     async def on_ready(self):
         print("bbrefcommands.py ready")
 
-    def convert_name(self, plr, draft_order) -> str:
+    def convert_name(self, plr: str, draft_order) -> str:
         if len(str(draft_order)) == 1:
             draft_order = "0" + str(draft_order)
+        #Handling Apostrophes and - in names
+        if "'" in plr:
+            plr_index = plr.find("'")
+            plr = plr[0:plr_index] + plr[plr_index + 1:]
+        if "-" in plr:
+            plr_index = plr.find("-")
+            plr = plr[0:plr_index]
+
         plr_li = plr.split(' ')
         if len(plr_li[1]) > 5:
             plr_str = plr_li[1][0:5].lower() + plr_li[0][0:2].lower() + str(draft_order) + ".html"
@@ -51,6 +59,7 @@ class BbrefCommands(commands.Cog):
             avgs_table = soup.find("div", id="all_per_game-playoffs_per_game")
             avgs_szn = avgs_table.find("tfoot")
             stats = {
+            "NAME": soup.find("div", id="info").find("span").text,
             "PPG": avgs_szn.find("td", {"data-stat": "pts_per_g"}).text,
             "APG": avgs_szn.find("td",{"data-stat": "ast_per_g"}).text,
             "RPG": avgs_szn.find("td",{"data-stat": "trb_per_g"}).text,
@@ -64,6 +73,7 @@ class BbrefCommands(commands.Cog):
         else:
             avgs_szn = soup.find("tr", id=f"per_game.{season.split('-')[1]}")
             stats = {
+            "NAME": soup.find("div", id="info").find("span").text,
             "PPG": avgs_szn.find("td", {"data-stat": "pts_per_g"}).text,
             "APG": avgs_szn.find("td",{"data-stat": "ast_per_g"}).text,
             "RPG": avgs_szn.find("td",{"data-stat": "trb_per_g"}).text,
@@ -81,9 +91,9 @@ class BbrefCommands(commands.Cog):
     
     def create_embed(self, data, stats, player, season) -> discord.Embed:
         if season == "0":
-            title_str = f"{player.title()}'s Career Averages"
+            title_str = f"{stats['NAME']}'s Career Averages"
         else:
-            title_str = f"{player.title()}'s {season} Averages"
+            title_str = f"{stats['NAME']}'s {season} Averages"
         avg = discord.Embed(
             title=title_str,
             color = discord.Color.orange()
@@ -97,7 +107,7 @@ class BbrefCommands(commands.Cog):
         avg.add_field(name="Turnovers Per Game", value=stats["TOPG"], inline=False)
         avg.add_field(name="Minutes Per Game", value=stats["MPG"], inline=False)
         if season == "0":
-            avg.set_footer(text=f"{player.title()} played {stats['seasons_played']} seasons")
+            avg.set_footer(text=f"{stats['NAME']} played {stats['seasons_played']} seasons")
         return avg
 
     @app_commands.command(name="averages", description="Returns a player's ppg.")
@@ -112,12 +122,12 @@ class BbrefCommands(commands.Cog):
 
     @averages.error
     async def averages_error(self, ctx, error):
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send("Error: Missing required arguments. You must pass in a player")
-        elif isinstance(error, AttributeError):
-            await ctx.send("Error: Invalid input.")
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send("Error: Season doesn't exist")
+        if "IndexError" in str(error):
+            await ctx.response.send_message("Error: Player not found")
+        elif "BadArgument" in str(error):
+            await ctx.response.send_message("Error: Please enter a valid year")
+        elif "NoneType" in str(error):
+            await ctx.response.send_message("Error: DraftOrder/Season not found for player")
         else:
             await ctx.response.send_message(f"An error has occurred. {error}")
         
