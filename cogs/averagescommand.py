@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import asyncio
 import aiohttp
 
-class BbrefCommands(commands.Cog):
+class Averages(commands.Cog):
     def __init__(self, client):
         self.client = client
     
@@ -129,4 +129,4 @@ class BbrefCommands(commands.Cog):
         
 
 async def setup(client):
-    await client.add_cog(BbrefCommands(client))
+    await client.add_cog(Averages(client))
