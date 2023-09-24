@@ -1,7 +1,3 @@
-"""
-WHEN USING VSCODE ON WINDOWS, MAKE SURE THAT THE MICROSOFT STORE PYTHON ENVIRONMENT IS SELECTED!!!
-"""
-
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -11,13 +7,13 @@ from bs4 import BeautifulSoup
 import asyncio
 import aiohttp
 
-class BbrefCommands(commands.Cog):
+class Averages(commands.Cog):
     def __init__(self, client):
         self.client = client
     
     @commands.Cog.listener()
     async def on_ready(self):
-        print("bbrefcommands.py ready")
+        print("averages.py ready")
 
     def convert_name(self, plr: str, draft_order) -> str:
         if len(str(draft_order)) == 1:
@@ -89,7 +85,7 @@ class BbrefCommands(commands.Cog):
         image = soup.find("div", class_="media-item")
         return image.img["src"]
     
-    def create_embed(self, data, stats, player, season) -> discord.Embed:
+    def create_embed(self, data, stats, season) -> discord.Embed:
         if season == "0":
             title_str = f"{stats['NAME']}'s Career Averages"
         else:
@@ -117,7 +113,7 @@ class BbrefCommands(commands.Cog):
             plr_szn = self.convert_season(player, season)
             data = await self.page_tasks(session, f"https://basketball-reference.com/players/{plr_str[0]}/{plr_str}")
         stats = self.parse(data, plr_szn)
-        embed = self.create_embed(data, stats, player, plr_szn)
+        embed = self.create_embed(data, stats, plr_szn)
         await interaction.response.send_message(embed=embed)
 
     @averages.error
@@ -133,4 +129,4 @@ class BbrefCommands(commands.Cog):
         
 
 async def setup(client):
-    await client.add_cog(BbrefCommands(client))
+    await client.add_cog(Averages(client))
