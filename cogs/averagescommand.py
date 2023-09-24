@@ -13,7 +13,7 @@ class Averages(commands.Cog):
     
     @commands.Cog.listener()
     async def on_ready(self):
-        print("bbrefcommands.py ready")
+        print("averages.py ready")
 
     def convert_name(self, plr: str, draft_order) -> str:
         if len(str(draft_order)) == 1:
@@ -85,7 +85,7 @@ class Averages(commands.Cog):
         image = soup.find("div", class_="media-item")
         return image.img["src"]
     
-    def create_embed(self, data, stats, player, season) -> discord.Embed:
+    def create_embed(self, data, stats, season) -> discord.Embed:
         if season == "0":
             title_str = f"{stats['NAME']}'s Career Averages"
         else:
@@ -113,7 +113,7 @@ class Averages(commands.Cog):
             plr_szn = self.convert_season(player, season)
             data = await self.page_tasks(session, f"https://basketball-reference.com/players/{plr_str[0]}/{plr_str}")
         stats = self.parse(data, plr_szn)
-        embed = self.create_embed(data, stats, player, plr_szn)
+        embed = self.create_embed(data, stats, plr_szn)
         await interaction.response.send_message(embed=embed)
 
     @averages.error
