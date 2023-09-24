@@ -1,7 +1,3 @@
-"""
-WHEN USING VSCODE ON WINDOWS, MAKE SURE THAT THE MICROSOFT STORE PYTHON ENVIRONMENT IS SELECTED!!!
-"""
-
 import discord
 from discord.ext import commands
 from discord import app_commands
